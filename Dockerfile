@@ -1,9 +1,11 @@
 FROM alpine
 MAINTAINER Leo <liaohuqiu@gmail.com>
 
-ENV SIMPLE_OBFS_VER 0.0.2
-ENV SIMPLE_OBFS_URL https://github.com/shadowsocks/simple-obfs/archive/v$SIMPLE_OBFS_VER.tar.gz
-ENV SIMPLE_OBFS_DIR simple-obfs-$SIMPLE_OBFS_VER
+# use git checkout instead of downloading tar ball because:
+#   https://github.com/shadowsocks/simple-obfs/issues/58#issuecomment-288294991
+ENV SIMPLE_OBFS_TAG v0.0.3
+ENV SIMPLE_OBFS_URL https://github.com/shadowsocks/simple-obfs.git
+ENV SIMPLE_OBFS_DIR simple-obfs
 
 RUN set -ex \
     && apk add --no-cache libcrypto1.0 \
@@ -27,8 +29,11 @@ RUN set -ex \
                              pcre-dev \
                              tar \
                              udns-dev \
-    && curl -sSL $SIMPLE_OBFS_URL | tar xz \
+                             git \
+    && git clone $SIMPLE_OBFS_URL \
     && cd $SIMPLE_OBFS_DIR \
+        && git checkout tags/$SIMPLE_OBFS_TAG \
+        && git submodule update --init --recursive \
         && ./autogen.sh \
         && ./configure --disable-documentation \
         && make install \
